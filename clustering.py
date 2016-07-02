@@ -23,19 +23,23 @@ themes = themes['arr_0']
 enc_themes = np.load(ROOT + '/cache/gru32_themes128.npz')
 enc_themes = enc_themes['arr_0']
 
-print('loaded', tnse_themes.shape, 'and', themes.shape, 'themes')
+print('loaded', tnse_themes.shape, 'and', enc_themes.shape, 'encoded themes')
 
 plot_kwds = {'alpha': 0.5, 's': 2, 'linewidths': 0}
 sns.set_context('poster')
 sns.set_style('dark')
 sns.set_color_codes()
 
-# hdbscan
-clusterer = hdbscan.HDBSCAN(min_cluster_size=55, min_samples=120)
+#hdbscan
+clusterer = hdbscan.HDBSCAN(min_cluster_size=55, min_samples=90)
 clusterer.fit(enc_themes)
 
 # what is the most populated cluster ?
 lab_ct = {}
+
+print('shape of labels', clusterer.labels_.shape)
+# # # put it in cache
+np.savez_compressed(ROOT +'/cache/hdbscan_labels.npz', clusterer.labels_)
 
 for label in clusterer.labels_:
     if label not in lab_ct:
@@ -45,7 +49,7 @@ for label in clusterer.labels_:
 lab_ct = lab_ct.items()
 lab_ct.sort(key=itemgetter(1))
 print(len(lab_ct))
-main_label = lab_ct[::-1][5][0]
+main_label = lab_ct[::-1][15][0]
 
 main_idxs = []
 for i, label in enumerate(clusterer.labels_):

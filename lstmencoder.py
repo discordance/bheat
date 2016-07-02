@@ -1,51 +1,71 @@
 from keras.models import Model
-from keras import regularizers
-from keras.layers import Input, LSTM, RepeatVector, GRU, Dense, Masking, BatchNormalization
+from keras.layers import GRU, Flatten, Reshape, TimeDistributedDense, Dense, Input
+from keras import backend as K
 from sklearn.cross_validation import train_test_split
 import numpy as np
 import os
+from scipy.spatial.distance import cdist
+from keras import regularizers
 
-# load stuff
+FNULL = open(os.devnull, 'w')
+
+# import data
 ROOT = os.path.dirname(os.path.realpath(__file__))
 themes = np.load(ROOT + '/cache/themes128.npz')
 themes = themes['arr_0']
-themes = themes
-# remove velocitys, this adds noise
-themes = np.delete(themes, np.s_[15::], 2)
-#themes = themes/np.amax(themes)
 
-##################
-# LSTM AUTOENCODER
-##################
-# this is the size of our encoded representations
-seq_encoding_dim = 32  # 32 floats
-seq_inputs = Input(shape=(128, 15))
-masking = Masking(mask_value=0.)(seq_inputs)
-seq_encoded = GRU(seq_encoding_dim, init='he_normal', activation='relu')(masking)
-bm = BatchNormalization()(seq_encoded)
-seq_decoded = RepeatVector(128)(bm)
-seq_decoded = GRU(15, return_sequences=True, init='he_normal', activation='hard_sigmoid')(seq_decoded)
-seq_autoencoder = Model(seq_inputs, seq_decoded)
-seq_encoder = Model(seq_inputs, seq_encoded)
-seq_autoencoder.compile(optimizer='rmsprop', loss='binary_crossentropy')
+# toyise
+tdata = []
+for i, t in enumerate(themes):
+    nt = []
+    for j, s in enumerate(t):
+        if j % 4 == 0:
+            ns = [0, 0, 0, 0]
+            # kick
+            ns[0] = s[0]
+            # sn or stick
+            if s[1] > 0:
+                ns[1] = s[1]
+            elif s[2] > 0:
+                ns[1] = s[2]
+            else:
+                ns[1] = 0.
+            ns[2] = s[11]
+            if s[12] > 0:
+                ns[3] = s[12]
+            elif s[14] > 0:
+                ns[3] = s[14]
+            else:
+                ns[3] = 0
+            nt.append(ns)
+    tdata.append(nt)
 
-x_train, x_test, _, _ = train_test_split(themes, themes, test_size=0.33, random_state=0)
-seq_autoencoder.summary()
-seq_autoencoder.fit(x_train, x_train,
-                    nb_epoch=10,
-                    batch_size=256,
-                    shuffle=True,
-                    validation_data=(x_test, x_test))
+tdata = np.array(tdata)
+x_train, x_test, _, _ = train_test_split(tdata, tdata, test_size=0.22, random_state=0)
+# model
+input_dim = 4
 
-score = seq_autoencoder.evaluate(x_test, x_test, batch_size=256)
-print('Test score:', score)
-print(themes[3][0])
-print('-----')
-print(seq_autoencoder.predict(np.array([themes[3]]))[0][0])
-# seq_encoded_themes = seq_encoder.predict(themes)
+inputs = Input(shape=(x_train.shape[1], input_dim))
+encoded = GRU(16, activation='relu', return_sequences=True)(inputs)
+encoded = TimeDistributedDense(16)(encoded)
+encoded = TimeDistributedDense(2)(encoded)
+encoded = Flatten()(encoded)
+decoded = Dense(128)(encoded)
+decoded = Reshape((32,4))(decoded)
+decoded = GRU(input_dim, return_sequences=True, activation='hard_sigmoid')(decoded)
+m = Model(inputs, decoded)
+e = Model(inputs, encoded)
+
+m.compile(optimizer='adadelta', loss='binary_crossentropy')
+m.summary()
+m.fit(x_train, x_train, nb_epoch=500, batch_size=256, shuffle=True, validation_data=(x_test, x_test))
+
+tt = x_test[0]
+rr = np.around(m.predict(np.array([x_test[0]])))[0]
+print(x_test[0])
+print('======')
+print(rr)
+print(cdist(tt, rr, 'matching').diagonal().mean())
+encoded_themes = e.predict(tdata)
 # # # put it in cache
-#np.savez_compressed(ROOT +'/cache/lstm32_themes128.npz', seq_encoded_themes)
-
-
-
-
+np.savez_compressed(ROOT +'/cache/gru32_themes128.npz', encoded_themes)
