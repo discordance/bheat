@@ -48,6 +48,30 @@ def compress(seq):
     compressed = base64.encodestring(b64.encode('zlib'))
     return compressed
 
+def draw(seq, bar = 64, quarter = 16):
+    """
+    Draws the seq in the terminal
+    :param seq: seq to be drawn
+    :return:
+    """
+    st = ""
+    for i in reversed(range(0, 15)):
+        for j in range(0, len(seq)):
+            if seq[j][i] > 0.0:
+                st += 'X'
+            else:
+                char = ''
+                if j % bar == 0:
+                    char = '|'
+                elif  j % quarter == 0:
+                    char = ';'
+                else:
+                    char = '.'
+                st += char
+        st += "\n"
+    return st
+
+
 def np_seq2mid(np_seq):
     """
     Converts a numpy array to a midi file.
