@@ -10,10 +10,11 @@ import utils
 import progressbar
 import random
 
+STYLE = 'jazz'
 FNULL = open(os.devnull, 'w')
 ROOT = os.path.dirname(os.path.realpath(__file__))
 # for playback and tests
-beats = np.load(ROOT + '/cache/jazz.npz')
+beats = np.load(ROOT + '/cache/'+STYLE+'.npz')
 beats = beats['arr_0']
 
 # transform bars and keep them unique
@@ -69,7 +70,7 @@ med = np.mean(enc, axis=0)
 rnd = np.random.multivariate_normal(med, cov, 20)
 news = d.predict(rnd)
 
-#news = np.around(news)
+# round keeping velocity
 for i, beat in enumerate(news):
     for j, step in enumerate(beat):
         for k, perc in enumerate(step):
@@ -79,11 +80,20 @@ for i, beat in enumerate(news):
                 if perc < 0.1:
                     news[i][j][k] = 0.0
 
+# issue midi
 for i, bd in enumerate(news):
     print(utils.draw(bd))
     mf = utils.np_seq2mid(bd)
-    mf.open(ROOT+'/../out/'+str(i)+'.mid', 'wb')
+    mf.open(ROOT+'/../out/'+STYLE+'_'+str(i)+'.mid', 'wb')
     mf.write()
     mf.close()
+
+# save model
+encoder_arch = e.to_json()
+decoder_arch = d.to_json()
+open(ROOT+'/models/'+STYLE+'/decoder_arch.json', 'w').write(decoder_arch)
+d.save_weights(ROOT+'/models/'+STYLE+'/decoder_weights.h5')
+# save distibution
+np.savez_compressed(ROOT+'/models/'+STYLE+'/distr.npz', med= med, cov= cov)
 
 
