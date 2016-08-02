@@ -21,6 +21,7 @@ print('clean beats ...')
 nbeats = []
 compress = []
 bar = progressbar.ProgressBar()
+print('mean', beats.mean())
 for beat in bar(beats):
     for bar in beat:
     #bar = random.choice(beat)
@@ -29,36 +30,6 @@ for beat in bar(beats):
             nbeats.append(bar)
             compress.append(cp)
 beats = np.array(nbeats)
-# beats = np.delete(beats, np.s_[15::], 2)
-
-# tdata = []
-# for i, t in enumerate(beats):
-#     nt = []
-#     for j, s in enumerate(t):
-#         if j % 4 == 0:
-#             ns = [0, 0, 0, 0]
-#             # kick
-#             ns[0] = s[0]
-#             # sn or stick
-#             if s[1] > 0:
-#                 ns[1] = s[1]
-#             elif s[2] > 0:
-#                 ns[1] = s[2]
-#             else:
-#                 ns[1] = 0.
-#             ns[2] = s[11]
-#             if s[12] > 0:
-#                 ns[3] = s[12]
-#             elif s[14] > 0:
-#                 ns[3] = s[14]
-#             else:
-#                 ns[3] = 0
-#
-#             nt.append(ns)
-#     if np.mean(nt) > 0.05:
-#         tdata.append(nt)
-# beats = np.array(tdata)
-# beats = beats
 
 x_train, x_test, _, _ = train_test_split(beats, beats, test_size=0.25, random_state=0)
 print('size', x_train.shape, x_test.shape)
