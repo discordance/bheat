@@ -39,7 +39,6 @@ for i, t in enumerate(themes):
                 ns[3] = 0
             nt.append(ns)
     tdata.append(nt)
-
 tdata = np.array(tdata)
 x_train, x_test, _, _ = train_test_split(tdata, tdata, test_size=0.22, random_state=0)
 # model

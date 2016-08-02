@@ -55,7 +55,7 @@ def draw(seq, bar = 64, quarter = 16):
     :return:
     """
     st = ""
-    for i in reversed(range(0, 15)):
+    for i in reversed(range(0, len(seq[0]))):
         for j in range(0, len(seq)):
             if seq[j][i] > 0.0:
                 st += 'X'

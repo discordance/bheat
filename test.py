@@ -1,14 +1,9 @@
 import numpy as np
 
 
-test = np.array([[
-    [0, 0, 0, 0, 0],
-    [1, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-],[
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0],
-]])
 
-print(np.roll(test, -1, axis=1))
+# COV TEST
+
+# cov = np.cov(test.T)
+# print(test.mean(axis=0), cov.shape)
+# print(np.random.multivariate_normal(test.mean(axis=0), cov, 50))

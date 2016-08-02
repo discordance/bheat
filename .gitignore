@@ -3,3 +3,6 @@
 classify/cache/
 utils.pyc
 bheat_venv/
+generate/cache
+generate/models
+out
