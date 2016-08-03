@@ -1,4 +1,4 @@
-from keras.layers import Input, Dense, GRU, TimeDistributed, Flatten, RepeatVector, Reshape
+from keras.layers import Input, Dense, Dropout, Reshape
 from keras.models import Model
 from keras.optimizers import Adam
 from keras import regularizers
@@ -40,6 +40,7 @@ print('size', x_train.shape, x_test.shape)
 input_dim = 20
 inputs = Input(shape=(x_train.shape[1], input_dim))
 encoded = Reshape((x_train.shape[1]*x_train.shape[2],))(inputs)
+encoded = Dropout(0.05)(encoded)
 encoded = Dense(256)(encoded)
 encoded = Dense(64)(encoded)
 encoded = Dense(8)(encoded)
@@ -66,27 +67,6 @@ m.fit(x_train,
 enc = e.predict(beats)
 cov = np.cov(enc.T)
 med = np.mean(enc, axis=0)
-
-rnd = np.random.multivariate_normal(med, cov, 20)
-news = d.predict(rnd)
-
-# round keeping velocity
-for i, beat in enumerate(news):
-    for j, step in enumerate(beat):
-        for k, perc in enumerate(step):
-            if k < 15:
-                news[i][j][k] = round(perc)
-            else:
-                if perc < 0.1:
-                    news[i][j][k] = 0.0
-
-# issue midi
-for i, bd in enumerate(news):
-    print(utils.draw(bd))
-    mf = utils.np_seq2mid(bd)
-    mf.open(ROOT+'/../out/'+STYLE+'_'+str(i)+'.mid', 'wb')
-    mf.write()
-    mf.close()
 
 # save model
 encoder_arch = e.to_json()

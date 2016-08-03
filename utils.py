@@ -35,18 +35,51 @@ PERC_GROUPS = [
 ]
 
 
+def clean_ml_out(seq):
+    """
+    Restore a clean version of a sequence that outputed of a neural network
+    :param seq:
+    :return:
+    """
+    # find the group
+    def fgroup(idx):
+        group = None
+        for index, grp in enumerate(PERC_GROUPS):
+            if idx in grp:
+                group = index
+        return group
+    for j, step in enumerate(seq):
+        step_grps = []
+        for k, perc in enumerate(step[:15]):
+            seq[j][k] = round(perc)
+            grp = fgroup(k)
+            if seq[j][k] == 1.0:
+                step_grps.append(grp)
+        for i in range(0, 5):
+            if i not in step_grps:
+                step[15 + i] = 0
+    return seq
+
 
 def decompress(str, bar):
+    """
+    decompress zipped string to numpy seq
+    """
     zipped = base64.decodestring(str)
     b64 = zipped.decode('zlib')
     arr = np.frombuffer(base64.decodestring(b64))
     rshaped = arr.reshape(len(arr)/bar/20, bar, 20)
     return rshaped
 
+
 def compress(seq):
+    """
+    compress a numpy seq to a zipped base64 (to store in DB)
+    """
     b64 = base64.b64encode(seq)
     compressed = base64.encodestring(b64.encode('zlib'))
     return compressed
+
 
 def draw(seq, bar = 64, quarter = 16):
     """
@@ -56,18 +89,27 @@ def draw(seq, bar = 64, quarter = 16):
     """
     st = ""
     for i in reversed(range(0, len(seq[0]))):
-        for j in range(0, len(seq)):
-            if seq[j][i] > 0.0:
-                st += 'X'
-            else:
-                char = ''
-                if j % bar == 0:
-                    char = '|'
-                elif  j % quarter == 0:
-                    char = ';'
+        if i < 15:
+            for j in range(0, len(seq)):
+                if seq[j][i] > 0.0:
+                    st += 'X'
                 else:
-                    char = '.'
-                st += char
+                    char = ''
+                    if j % bar == 0:
+                        char = '|'
+                    elif  j % quarter == 0:
+                        char = ';'
+                    else:
+                        char = '.'
+                    st += char
+        else:
+            for j in range(0, len(seq)):
+                if seq[j][i] > 0.75:
+                    st += 'O'
+                elif seq[j][i] > 0.0:
+                    st += 'o'
+                else:
+                    st += ' '
         st += "\n"
     return st
 
