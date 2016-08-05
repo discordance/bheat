@@ -1,4 +1,4 @@
-# THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32 python
+# THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32,allow_gc=False python
 from keras.layers import Input, Dense, Dropout, Reshape
 from keras.models import Model
 
@@ -11,7 +11,7 @@ import utils
 import progressbar
 import random
 
-STYLE = 'techno'
+STYLE = 'jazz'
 FNULL = open(os.devnull, 'w')
 ROOT = os.path.dirname(os.path.realpath(__file__))
 # for playback and tests
@@ -27,7 +27,7 @@ bar = progressbar.ProgressBar()
 for beat in bar(beats):
     for bar in beat:
         cp = utils.compress(bar)
-        if cp not in compress and bar.mean() > 0.01 and bar.mean() < 0.028:
+        if cp not in compress and 0.01 <= bar.mean() < 0.028:
             nbeats.append(bar)
             compress.append(cp)
 beats = np.array(nbeats)
