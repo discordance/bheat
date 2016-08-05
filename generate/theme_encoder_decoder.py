@@ -1,6 +1,7 @@
+# THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32 python
 from keras.layers import Input, Dense, Dropout, Reshape
 from keras.models import Model
-from keras.optimizers import Adam
+
 from keras import regularizers
 import numpy as np
 import os
@@ -10,7 +11,7 @@ import utils
 import progressbar
 import random
 
-STYLE = 'jazz'
+STYLE = 'techno'
 FNULL = open(os.devnull, 'w')
 ROOT = os.path.dirname(os.path.realpath(__file__))
 # for playback and tests
@@ -26,7 +27,7 @@ bar = progressbar.ProgressBar()
 for beat in bar(beats):
     for bar in beat:
         cp = utils.compress(bar)
-        if cp not in compress and bar.mean() > 0.0125:
+        if cp not in compress and bar.mean() > 0.01 and bar.mean() < 0.028:
             nbeats.append(bar)
             compress.append(cp)
 beats = np.array(nbeats)
@@ -40,8 +41,8 @@ print('size', x_train.shape, x_test.shape)
 input_dim = 20
 inputs = Input(shape=(x_train.shape[1], input_dim))
 encoded = Reshape((x_train.shape[1]*x_train.shape[2],))(inputs)
-encoded = Dropout(0.05)(encoded)
-encoded = Dense(256)(encoded)
+encoded = Dropout(0.3)(encoded)
+encoded = Dense(256, activity_regularizer=regularizers.activity_l1(10e-5))(encoded)
 encoded = Dense(64)(encoded)
 encoded = Dense(8)(encoded)
 # decoder

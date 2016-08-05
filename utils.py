@@ -35,6 +35,22 @@ PERC_GROUPS = [
 ]
 
 
+def normalizer(seq):
+    """
+    compress / normalize velocities
+    """
+    vels = seq[:, -5:]
+    for i, vel in enumerate(vels.T):
+        med = vel[np.nonzero(vel)].mean()
+        gaps = med - vel[np.nonzero(vel)]
+        vel[np.nonzero(vel)] += (gaps / 1.3)
+    trunk = np.delete(seq, np.s_[15::], 1)
+    gap = 0.90 - np.max(vels)
+    vels[np.nonzero(vels)] = np.absolute(vels[np.nonzero(vels)] + gap)
+    trunk = np.column_stack((trunk, vels))
+    return trunk
+
+
 def clean_ml_out(seq):
     """
     Restore a clean version of a sequence that outputed of a neural network
